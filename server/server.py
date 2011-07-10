@@ -29,7 +29,7 @@ class Application(tornado.web.Application):
 class IndexHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
-		self.render('static/index.html')
+		self.render('static/templates/index.html')
 		
 def main():
     tornado.options.parse_command_line()
