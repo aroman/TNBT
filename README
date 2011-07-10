@@ -1,0 +1,5 @@
+TNBT is a bug tracker. For the entire planet, about all issues, including each citizen of the planet, for all reasons, with every intent on making the world a better place to live in.
+
+It's open source (obviously), completely free to use, non-profit, and licensed under the Affero GNU Public License (AGPL3).
+
+TNBT is written in Python, using the Tornado Web Server and using MongoDB for data persistence.

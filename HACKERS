@@ -1,0 +1,12 @@
+We should talk about coding style, project-specific idioms, and just generally how we do things here.
+
+Code Format:
+    - 4-space-width tabs, using spaces and not actual tabs.
+    - Docstrings before every method and class, basically no exceptions.
+    - Read PEP8 like it's your job, and take it very seriously.
+    - Comments are good. Use them.
+    - Wrap lines if they start getting to over 100+ lines.
+
+Project Practices:
+    - TDD is important, write tests. Docstring tests work too.
+    - 
