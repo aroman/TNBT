@@ -29,9 +29,8 @@ class Application(tornado.web.Application):
 class IndexHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
-        self.write("Nothing here yet.")
-        self.flush()
-        
+		self.render('static/templates/index.html')
+
 def main():
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application(), xheaders=True)
