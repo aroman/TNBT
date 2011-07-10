@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright June-July 2011 Hunter Lang and Avi Romanoff
-# ? License
+# Copyright 2011 Hunter Lang and Avi Romanoff
+# AGPL 3 License. See LICENSE.
 import tornado.httpserver
 import tornado.httpclient
 import tornado.ioloop
@@ -17,7 +17,7 @@ define("port", default=8888, help="run on the given port", type=int)
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-			(r"/", IndexHandler),
+            (r"/", IndexHandler),
         ]
         
         settings = dict(
@@ -29,8 +29,9 @@ class Application(tornado.web.Application):
 class IndexHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
-		self.render('static/index.html')
-		
+        self.write("Nothing here yet.")
+        self.flush()
+        
 def main():
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application(), xheaders=True)
