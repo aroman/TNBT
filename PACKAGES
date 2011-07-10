@@ -1,0 +1,12 @@
+This file lists the third-party modules, libraries, and packages
+that we use for all reasons, and the version that we support.
+It is here so that we don't ever run into problems of not being
+on the same version of something, and to ease deployment.
+
+The format is roughly based on PIP. Standard equivalency operators apply.
+
+Backend:
+    - Tornado==2.0
+
+Frontend:
+    - jQuery==1.6.2
