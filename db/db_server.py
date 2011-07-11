@@ -36,7 +36,7 @@ class Application(tornado.web.Application):
 class ViewCategoriesHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
-        self.finish(['all'])
+        self.finish(['struts', 'cake', 'flamework', 'java', 'foo'])
 
 class GetCategoryIdFromName(tornado.web.RequestHandler):
     @tornado.web.asynchronous
