@@ -20,7 +20,6 @@ global_locales = db['global-locales']
 
 class Application(tornado.web.Application):
     def __init__(self):
-        obj_id_regex = r"[a-z0img-9]+"
         handlers = [
             (r"/gcdifn/([A-Za-z0-9\-\.\_]+)", GetCategoryIdFromName),
             (r"/view/categories", ViewCategoriesHandler),
