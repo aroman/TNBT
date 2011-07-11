@@ -46,7 +46,7 @@ class EditHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def post(self):
 		print self.request.arguments
-		var = 1
+		
 		self.finish()
 def main():
     tornado.options.parse_command_line()
