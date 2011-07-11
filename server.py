@@ -15,6 +15,7 @@ import sqlite3 as db
 #27017
 define("port", default=8888, help="run on the given port", type=int)
 
+# This is a serious file. For serious people. So be serious from here on out.
 
 class Application(tornado.web.Application):
     def __init__(self):
@@ -86,7 +87,7 @@ class TopicHandler(tornado.web.RequestHandler):
         
         glob_locale = os.path.split(response.request.url)[1]
         print glob_locale
-        self.finish()
+        self.render("static/templates/topic.html", glob_locale = glob_locale, glob_topic = glob_topic, topics=topics)
 
 
 def main():
