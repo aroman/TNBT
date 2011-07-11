@@ -18,10 +18,12 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", IndexHandler),
+            (r"/edit", EditHandler),
+            (r"/view", ViewHandler),
         ]
         
         settings = dict(
-
+        	xsrf_cookies=True,
         )
         tornado.web.Application.__init__(self, handlers, **settings) 
 
@@ -30,7 +32,22 @@ class IndexHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
 		self.render('static/templates/index.html')
-
+		
+class ViewHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def post(self):
+    	name = self.request.arguments['name'][0]
+    	print name
+    	http = tornado.httpclient.AsyncHTTPClient()
+    	http.fetch("http://71.224.204.102:9999/view/category/" + name, callback=self.on_response)
+    def on_response(self, response):
+    	self.finish(response.body)
+class EditHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def post(self):
+		print self.request.arguments
+		var = 1
+		self.finish()
 def main():
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application(), xheaders=True)
