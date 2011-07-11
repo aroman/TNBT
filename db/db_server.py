@@ -21,6 +21,7 @@ global_locales = db['global-locales']
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
+            (r"/view/children/([A-Za-z0-9\-\.\_]+)", ViewChildrenHandler)
             (r"/gcdifn/([A-Za-z0-9\-\.\_]+)", GetCategoryIdFromName),
             (r"/view/categories", ViewCategoriesHandler),
             (r"/view/category/([A-Za-z0-9\-\.\_]+)", ViewCategoryHandler),
@@ -32,6 +33,11 @@ class Application(tornado.web.Application):
         )
         tornado.web.Application.__init__(self, handlers, **settings) 
 
+class ViewChildrenHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self, parent_name):
+        print parent_name
+        self.finish("") #put list of children there <-- 
 class ViewCategoriesHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
