@@ -21,8 +21,8 @@ global_locales = db['global-locales']
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/view/children/([A-Za-z0-9\-\.\_]+)", ViewChildrenHandler)
             (r"/gcdifn/([A-Za-z0-9\-\.\_]+)", GetCategoryIdFromName),
+            (r"/view/children/([A-Za-z0-9\-\.\_\%]+)", ViewChildrenHandler),
             (r"/view/categories", ViewCategoriesHandler),
             (r"/view/category/([A-Za-z0-9\-\.\_]+)", ViewCategoryHandler),
             (r"/edit/category/([A-Za-z0-9\-\.\_]+)", EditCategoryHandler),
@@ -36,16 +36,22 @@ class Application(tornado.web.Application):
 class ViewChildrenHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, parent_name):
-        print parent_name
-        self.finish("") #put list of children there <-- 
+        results = []
+        try:
+            for children in global_topics.find_one({'name' : parent_name})['children']:
+                for child in children:
+                    results.append(child['name'])
+        except TypeError:
+            results = None
+        self.finish(str(results))
+
 class ViewCategoriesHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
-        toppings = global_topics.find()
-        fuckups = []
+        results = []
         for post in global_topics.find():
-            str(fuckups.append(post['name']))
-        self.finish(str(fuckups))
+            results.append(post['name'])
+        self.finish(str(results))
 
 class GetCategoryIdFromName(tornado.web.RequestHandler):
     @tornado.web.asynchronous
