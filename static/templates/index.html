@@ -4,6 +4,13 @@
 <title>TNBT</title> <!-- This, like all instacnes of the app name, should refer to a global template varible that we define somewhere, so that we can change the name of the app once we decide on it easily and painlessly. -->
 </head>
 <body>
+<ul>
+
+{% for thing in stuff %}
+    <li>{{thing}}</li>
+{% end %}
+</ul>
+
 <h1>It works!</h1>
 <form action="/edit" method="post" id="editform">
 <input type="submit" value="Edit">
