@@ -45,9 +45,9 @@ class IndexHandler(tornado.web.RequestHandler):
 class NewCommentHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
-    	request = tornado.httpclient.HTTPRequest("http://localhost:9999/wait/comment", "POST")
+    	post_request = tornado.httpclient.HTTPRequest("http://localhost:9999/wait/comment", "POST")
     	http = tornado.httpclient.AsyncHTTPClient()
-    	http.fetch(request, callback=self.on_response)
+    	http.fetch(post_request, callback=self.on_response)
     def on_response(self, response):
     	if response.error: self.finish(response.error)
     	self.finish(response.body)

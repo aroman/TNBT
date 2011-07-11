@@ -49,7 +49,7 @@ class CommentMixin(object):
             if recent:
                 callback(recent)
                 return
-        cls.waiters.append(callback, discussion_id)
+        cls.waiters.append([callback, discussion_id])
 
     def new_comments(self, comments):
         print comments
