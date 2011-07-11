@@ -11,6 +11,7 @@ import tornado.options
 import tornado.web
 import tornado.escape as escape
 import sqlite3 as dbmod
+import uuid
 
 define("port", default=9999, help="run on the given port", type=int)
 
@@ -20,9 +21,10 @@ db = dbc.cursor()
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/view/children/global_topic/([A-Za-z0-9\-\.\_\%]+)", ViewGlobalLocalesHandler),
-            (r"/view/children/global_locale/([A-Za-z0-9\-\.\_\%]+)", ViewTopicsHandler),
-            (r"/view/childre/topic/([A-Za-z0-9\-\.\_\%]+)", ViewLocalesHandler),
+            (r"/view/children/([A-Za-z0-9\-\.\_\%]+)", ViewGlobalLocalesHandler),
+            (r"/view/children/([A-Za-z0-9\-\.\_\%]+)/([A-Za-z0-9\-\.\_\%]+)", ViewTopicsHandler),
+            (r"/view/children/([A-Za-z0-9\-\.\_\%]+)/([A-Za-z0-9\-\.\_\%]+)/([A-Za-z0-9\-\.\_\%]+)", ViewLocalesHandler),
+            (r"/view/children/([A-Za-z0-9\-\.\_\%]+)/([A-Za-z0-9\-\.\_\%]+)/([A-Za-z0-9\-\.\_\%]+)/([A-Za-z0-9\-\.\_\%]+)", ViewIssuesHandler),
             (r"/view/categories", ViewCategoriesHandler),
         ]
         
@@ -48,13 +50,11 @@ class ViewGlobalLocalesHandler(tornado.web.RequestHandler):
 
 class ViewTopicsHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
-    def get(self, raw_data):
-        arr = escape.url_unescape(raw_data).split("|")
-        global_locale = arr[1]
-        global_topic = arr[0]
+    def get(self, global_topic, global_locale):
+
         db.execute('select _id from global_topic where name = ?', [global_topic])
         topic_id = db.fetchone()[0]
-        db.execute('select _id from global_locale where parent_id = ?', [topic_id])
+        db.execute('select _id from global_locale where parent_id = ? and name = ?', [topic_id, global_locale])
         locale_id = db.fetchone()[0]
         db.execute('select name from topic where parent_id = ?', [locale_id])
         topics = db.fetchall()
@@ -67,11 +67,7 @@ class ViewTopicsHandler(tornado.web.RequestHandler):
 
 class ViewLocalesHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
-    def get(self, raw_data):
-        arr = escape.url_unescape(raw_data).split("|")
-        topic = arr[2]
-        global_locale = arr[1]
-        global_topic = arr[0]
+    def get(self, global_topic, global_locale, topic):
         db.execute('select _id from global_topic where name = ?', [global_topic])
         topic_id = db.fetchone()[0]
         db.execute('select _id from global_locale where parent_id = ? and name = ?', [topic_id, global_locale])
@@ -82,7 +78,26 @@ class ViewLocalesHandler(tornado.web.RequestHandler):
         locales = db.fetchall()
         finish = {
             "parent": global_topic,
-            "children": topics
+            "children": locales
+        }
+        
+        self.finish(finish)
+class ViewIssuesHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self, global_topic, global_locale, topic, locale):
+        db.execute('select _id from global_topic where name = ?', [global_topic])
+        topic_id = db.fetchone()[0]
+        db.execute('select _id from global_locale where parent_id = ? and name = ?', [topic_id, global_locale])
+        locale_id = db.fetchone()[0]
+        db.execute('select _id from topic where parent_id = ? and name = ?', [locale_id, topic])
+        topic_id = db.fetchone()[0]
+        db.execute('select _id from locale where parent_id = ? and name = ?', [topic_id, locale])
+        locale_id = db.fetchone()[0]
+        db.execute('select _id from issue where parent_id = ?', [locale_id])
+        issues = db.fetchall()
+        finish = {
+            "parent": global_topic,
+            "children": issues
         }
         
         self.finish(finish)
