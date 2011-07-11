@@ -32,9 +32,11 @@ class IndexHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
     	http = tornado.httpclient.AsyncHTTPClient()
-    	http.fetch("http://71.224.204.102:9999/view/categories" + name, callback=self.on_response)			self.render('static/templates/index.html')
+    	http.fetch("http://71.224.204.102:9999/view/categories", callback=self.on_response)	
     def on_response(self, response):
-    	self.finish(response.body)
+		if response.error: self.finish("avi fucked up")
+		stuff = eval(response.body)
+		self.render('static/templates/index.html', stuff=stuff)
 		
 class ViewHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
