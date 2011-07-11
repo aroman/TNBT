@@ -14,7 +14,6 @@ from pymongo import Connection
 define("port", default=9999, help="run on the given port", type=int)
 connection = Connection('localhost', 27017)
 db = connection['struts_server']
-
 global_topics = db['global-topic']
 global_locales = db['global-locales']
 
@@ -36,9 +35,13 @@ class Application(tornado.web.Application):
 class ViewCategoriesHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
+        poverty = {'name' : "Poverty", 'hunterfuckedup' : True}
+        global_topics.insert(poverty)
+        toppings = global_topics.find()
+        fuckups = []
         for post in global_topics.find():
-            print post
-        self.finish(str(['hunter fucked up']))
+            str(fuckups.append(post['name']))
+        self.finish(str(fuckups))
 
 class GetCategoryIdFromName(tornado.web.RequestHandler):
     @tornado.web.asynchronous
