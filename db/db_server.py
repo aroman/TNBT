@@ -44,7 +44,9 @@ class ViewChildrenHandler(tornado.web.RequestHandler):
                     results["children"].append(child["name"])
         except TypeError:
             results = None
-        self.finish(str(results))
+        
+        
+        self.finish(results)
 
 class ViewCategoriesHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
