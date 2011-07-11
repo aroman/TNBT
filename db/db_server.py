@@ -12,11 +12,11 @@ import tornado.web
 from pymongo import Connection
 
 define("port", default=9999, help="run on the given port", type=int)
+connection = Connection('localhost', 27017)
+db = connection['struts_server']
 
-class MongoBroker():
-    def __init__(self):
-        connection = Connection('localhost', 27017)
-        self.db = connection['struts_server']
+global_topics = db['global-topic']
+global_locales = db['global-locales']
 
 class Application(tornado.web.Application):
     def __init__(self):
@@ -36,7 +36,9 @@ class Application(tornado.web.Application):
 class ViewCategoriesHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
-        self.finish(str(['struts', 'cake', 'flamework', 'java', 'foo']))
+        for post in global_topics.find():
+            print post
+        self.finish(str(['hunter fucked up']))
 
 class GetCategoryIdFromName(tornado.web.RequestHandler):
     @tornado.web.asynchronous
