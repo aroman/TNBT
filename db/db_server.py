@@ -23,24 +23,24 @@ class Application(tornado.web.Application):
         ]
         
         settings = dict(
-#            ('debug' : True),
+            debug : True,
         )
         tornado.web.Application.__init__(self, handlers, **settings) 
 
 class GetCategoryIdFromName(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, name):
-        self.finish(str([{'name' : name, 'id' : '4de6abd5da558a49fc5eef29'}]))
+        self.finish([{'name' : name, 'id' : '4de6abd5da558a49fc5eef29'}])
 
 class ViewCategoryHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, foo):
-		self.finish(str([{'bite_me' : True}]))
+		self.finish([{'bite_me' : True}])
 
 class EditCategoryHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def post(self, foo):
-		self.finish(str([{'bite_me' : True}]))
+		self.finish([{'bite_me' : True}])
 
 def main():
     tornado.options.parse_command_line()
