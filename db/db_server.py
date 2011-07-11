@@ -31,7 +31,7 @@ class Application(tornado.web.Application):
         settings = dict(
             debug= True,
         )
-        tornado.web.Application.__init__(self, handlers, **settings) 
+        tornado.web.Application.__init__(self, handlers, **settings)
 
 class ViewChildrenHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
@@ -41,17 +41,17 @@ class ViewChildrenHandler(tornado.web.RequestHandler):
             parent_name = splits[0]
             child_name = splits[1]
         except:
-            self.finish("You forgot the pipe, dumbass.")
+            child_name = raw
         results = {"parent" : "", "children" : []}
-        try:
-            parent = global_topics.find_one({"name" : parent_name})
-            results["parent"] = parent["name"]
-            for child in parent["children"][0]:
-                    results["children"].append(child["name"])
-        except TypeError:
-            results = None
-        
-        
+#        try:
+        parent = global_topics.find_one({"name" : parent_name}) # Get parent
+        subcat = parent['children']
+        results["parent"] = parent["name"]
+        for child in subcat[2]['children']: # <--- Hey fuck you don't comment about this. kthxbye.
+            results["children"].append(child["name"])
+#        except TypeError:
+#            results = None
+
         self.finish(results)
 
 class ViewCategoriesHandler(tornado.web.RequestHandler):
