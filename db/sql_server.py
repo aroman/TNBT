@@ -20,7 +20,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/add/comment", AddCommentHandler),
-            (r"/wait/comment", CommentHandler),
+            (r"/wait/comment/([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})", CommentHandler),
             (r"/view/children/([A-Za-z0-9\-\.\_\%]+)", ViewGlobalLocalesHandler),
             (r"/view/children/([A-Za-z0-9\-\.\_\%]+)/([A-Za-z0-9\-\.\_\%]+)", ViewTopicsHandler),
             (r"/view/children/([A-Za-z0-9\-\.\_\%]+)/([A-Za-z0-9\-\.\_\%]+)/([A-Za-z0-9\-\.\_\%]+)", ViewLocalesHandler),
@@ -52,8 +52,8 @@ class CommentMixin(object):
         cls.waiters.append([callback, discussion_id])
 
     def new_comments(self, comments):
-        print comments
         cls = CommentMixin
+        print cls.waiters
         for callback in cls.waiters:
             try:
                 callback[0](comments)
@@ -176,9 +176,8 @@ class ViewCategoriesHandler(BaseHandler):
         
 class CommentHandler(tornado.web.RequestHandler, CommentMixin):
     @tornado.web.asynchronous
-    def post(self):
+    def get(self, discussion_id):
         cursor = self.get_argument("cursor", None)
-        discussion_id = self.get_argument('discussion_id')
         self.wait_for_comments(self.async_callback(self.on_new_comments), discussion_id, cursor=cursor)
 
     def on_new_comments(self, comments):

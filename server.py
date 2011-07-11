@@ -19,6 +19,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", IndexHandler),
+            (r"/waitforcomments", WaitForCommentsHandler),
             (r"/comment", NewCommentHandler),
             (r"/([a-zA-Z0-9\+]+)/", GlobalLocaleHandler),
             (r"/([a-zA-Z0-9\+]+)/([a-zA-Z0-9\+]+)/", TopicHandler),
@@ -42,15 +43,28 @@ class IndexHandler(tornado.web.RequestHandler):
 		globtops = eval(response.body)
 		self.render('static/templates/index.html', globtops=globtops)
 		
+class WaitForCommentsHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def post(self):
+        discussion_id = self.request.arguments['discussion_id'][0]
+    	_request = tornado.httpclient.HTTPRequest("http://localhost:9999/wait/comment/" + discussion_id)
+    	http = tornado.httpclient.AsyncHTTPClient()
+    	http.fetch(_request, callback=self.on_response)
+    def on_response(self, response):
+    	if response.error: self.finish(response.error)
+    	print "HOLYFUCKITWORKED"
+    	self.finish(response.body)
+
 class NewCommentHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
-    def get(self):
-    	post_request = tornado.httpclient.HTTPRequest("http://localhost:9999/wait/comment", "POST")
+    def post(self):
+    	_request = tornado.httpclient.HTTPRequest("http://localhost:9999/add/comment", "POST")
     	http = tornado.httpclient.AsyncHTTPClient()
-    	http.fetch(post_request, callback=self.on_response)
+    	http.fetch(_request, callback=self.on_response)
     def on_response(self, response):
     	if response.error: self.finish(response.error)
     	self.finish(response.body)
+
 class ViewHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def post(self):
