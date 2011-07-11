@@ -15,6 +15,8 @@ import sqlite3 as db
 #27017
 define("port", default=8888, help="run on the given port", type=int)
 
+# This is a serious file. For serious people. So be serious from here on out.
+
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
@@ -60,26 +62,32 @@ class GlobalLocaleHandler(tornado.web.RequestHandler):
         http.fetch("http://71.224.204.102:9999/view/children/" + topic, callback=self.on_response)
     def on_response(self, response):
         if response.error: self.finish("avi fucked up")
-        print response.body
         json = escape.json_decode(response.body)
         parent = json['parent']
         children = json['children']
-        print parent
-        print children
         glob_topic = os.path.split(response.request.url)[1]
-        self.render("static/templates/glob_locale.html", globlocales=eval(response.body), glob_topic=glob_topic)
+        self.render("static/templates/glob_locale.html", globlocales=children, glob_topic=parent)
 
 
 class TopicHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, global_topic, global_locale):
         http = tornado.httpclient.AsyncHTTPClient()
-        http.fetch("http://71.224.204.102:9999/view/children/" + global_locale, callback=self.on_response)
+        http.fetch("http://71.224.204.102:9999/view/children/" + global_topic + "|" + global_locale, callback=self.on_response)
     def on_response(self, response):
-        print response.request.url
-        #print eval(response.body)
-        #self.render("static/templates/glob_locale.html", globlocales=eval(response.body), glob_topic=glob_topic)
-        self.finish()
+        if response.error: self.finish("avi fucked up")
+        
+        print response.body
+        json = escape.json_decode(response.body)
+        
+        glob_topic = json['parent']
+        print "Glob topic: " + glob_topic
+        topics = json['children']
+        print topics
+        
+        glob_locale = os.path.split(response.request.url)[1]
+        print glob_locale
+        self.render("static/templates/topic.html", glob_locale = glob_locale, glob_topic = glob_topic, topics=topics)
 
 
 def main():

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ topic }}{% end %}
+{% block body %}
+
+    <a href="/">TNBT</a> --> <a href="/{{ url_escape(glob_topic) }}/">{{ glob_topic }}</a> --> <a href="/{{ url_escape(glob_locale) }}/">{{ glob_locale }}</a> --> <a href="/{{ url_escape(topic) }}/">{{ topic }}</a>
+    <ul>
+        {% for locale in locales %}
+            <li><a href="{{ url_escape(locale) }}/">{{ locale }}</a></li>
+        {% end %}
+    </ul>    
+
+{% end %}
