@@ -1,29 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>TNBT</title> <!-- This, like all instances of the app name, should refer to a global template varible that we define somewhere, so that we can change the name of the app once we decide on it easily and painlessly. -->
-</head>
-<body>
-<ul>
+{% extends "base.html" %}
+{% block body %}
+    <ul>
+        {% for top in globtops %}
+          <li><a href="/{{ url_escape(top) }}/">{{ top }}</a></li>
+        {% end %}
+    </ul>
 
-{% for top in globtops %}
-    <li>{{ top }}</li>
-    <form action="/edit" method="post" id="editform">
-        <input type="hidden" name="what_to_edit" value="{{ top }}">
-        <input type="submit" value="Edit">
+    <form action="/view" method="post" id="viewform">
+        <input type="text" value="" name="name">
+        <input type="submit" value="View">
         {{ xsrf_form_html() }}
     </form>
 {% end %}
-</ul>
-
-
-
-</form>
-
-<form action="/view" method="post" id="viewform">
-<input type="text" value="" name="name">
-<input type="submit" value="View">
-{{ xsrf_form_html() }}
-</form>
-</body>
-</html>

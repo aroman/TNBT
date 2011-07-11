@@ -8,17 +8,19 @@ import tornado.ioloop
 import tornado.options
 import tornado.web
 import tornado.template as template
+import tornado.escape as escape
 from tornado.options import define, options
 import os
 import sqlite3 as db
-
+#27017
 define("port", default=8888, help="run on the given port", type=int)
 
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", IndexHandler),
-            (r"/edit", EditHandler),
+            (r"/([a-zA-Z0-9\+]+)/", GlobalLocaleHandler),
+            (r"/([a-zA-Z0-9\+]+)/([a-zA-Z0-9\+]+)/", TopicHandler),
             (r"/view", ViewHandler),
         ]
         
@@ -38,6 +40,7 @@ class IndexHandler(tornado.web.RequestHandler):
 		globtops = eval(response.body)
 		self.render('static/templates/index.html', globtops=globtops)
 		
+
 class ViewHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def post(self):
@@ -46,13 +49,38 @@ class ViewHandler(tornado.web.RequestHandler):
     	http = tornado.httpclient.AsyncHTTPClient()
     	http.fetch("http://71.224.204.102:9999/view/category/" + name, callback=self.on_response)
     def on_response(self, response):
+    	if response.error: self.finish("avi fucked up")
     	self.finish(response.body)
-class EditHandler(tornado.web.RequestHandler):
+
+
+class GlobalLocaleHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
-    def post(self):
-		print self.request.arguments
-		
-		self.finish(self.request.arguments)
+    def get(self, topic):
+        http = tornado.httpclient.AsyncHTTPClient()
+        http.fetch("http://71.224.204.102:9999/view/children/" + topic, callback=self.on_response)
+    def on_response(self, response):
+        if response.error: self.finish("avi fucked up")
+        json = escape.json_decode(response.body)
+        parent = json['parent']
+        children = json['children']
+        print parent
+        print children
+        glob_topic = os.path.split(response.request.url)[1]
+        self.render("static/templates/glob_locale.html", globlocales=eval(response.body), glob_topic=glob_topic)
+
+
+class TopicHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self, global_topic, global_locale):
+        http = tornado.httpclient.AsyncHTTPClient()
+        http.fetch("http://71.224.204.102:9999/view/children/" + global_locale, callback=self.on_response)
+    def on_response(self, response):
+        print response.request.url
+        #print eval(response.body)
+        #self.render("static/templates/glob_locale.html", globlocales=eval(response.body), glob_topic=glob_topic)
+        self.finish()
+
+
 def main():
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application(), xheaders=True)
