@@ -9,7 +9,7 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.options
 import tornado.web
-import pymongo
+from pymongo import Connection
 
 define("port", default=9999, help="run on the given port", type=int)
 
@@ -23,7 +23,11 @@ class Application(tornado.web.Application):
         ]
         
         settings = dict(
+<<<<<<< HEAD
             debug : True,
+=======
+            debug=True,
+>>>>>>> dfa6e1c1a150ed0e95395c7a2ede889c1c3e052c
         )
         tornado.web.Application.__init__(self, handlers, **settings) 
 
