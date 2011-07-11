@@ -31,7 +31,10 @@ class Application(tornado.web.Application):
 class IndexHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
-		self.render('static/templates/index.html')
+    	http = tornado.httpclient.AsyncHTTPClient()
+    	http.fetch("http://71.224.204.102:9999/view/categories" + name, callback=self.on_response)			self.render('static/templates/index.html')
+    def on_response(self, response):
+    	self.finish(response.body)
 		
 class ViewHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
@@ -46,7 +49,7 @@ class EditHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def post(self):
 		print self.request.arguments
-		var = 1
+		
 		self.finish()
 def main():
     tornado.options.parse_command_line()
