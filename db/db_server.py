@@ -23,11 +23,7 @@ class Application(tornado.web.Application):
         ]
         
         settings = dict(
-<<<<<<< HEAD
-            debug : True,
-=======
-            debug=True,
->>>>>>> dfa6e1c1a150ed0e95395c7a2ede889c1c3e052c
+            debug= True,
         )
         tornado.web.Application.__init__(self, handlers, **settings) 
 
