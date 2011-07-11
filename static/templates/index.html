@@ -6,16 +6,16 @@
 <body>
 <ul>
 
-{% for thing in stuff %}
-    <li>{{thing}}</li>
+{% for top in globtops %}
+    <li>{{ top }}</li>
+    <form action="/edit" method="post" id="editform">
+        <input type="hidden" name="what_to_edit" value="{{ top }}">
+        <input type="submit" value="Edit">
+        {{ xsrf_form_html() }}
+    </form>
 {% end %}
 </ul>
 
-<h1>It works!</h1>
-<form action="/edit" method="post" id="editform">
-<input type="submit" value="Edit">
-{{ xsrf_form_html() }}
-</form>
 
 
 </form>
@@ -25,6 +25,5 @@
 <input type="submit" value="View">
 {{ xsrf_form_html() }}
 </form>
-<small><tt>..and it's not Apache...</tt></small>
 </body>
 </html>

@@ -35,8 +35,8 @@ class IndexHandler(tornado.web.RequestHandler):
     	http.fetch("http://71.224.204.102:9999/view/categories", callback=self.on_response)	
     def on_response(self, response):
 		if response.error: self.finish("avi fucked up")
-		stuff = eval(response.body)
-		self.render('static/templates/index.html', stuff=stuff)
+		globtops = eval(response.body)
+		self.render('static/templates/index.html', globtops=globtops)
 		
 class ViewHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
@@ -52,7 +52,7 @@ class EditHandler(tornado.web.RequestHandler):
     def post(self):
 		print self.request.arguments
 		
-		self.finish()
+		self.finish(self.request.arguments)
 def main():
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application(), xheaders=True)
