@@ -13,11 +13,17 @@ from pymongo import Connection
 
 define("port", default=9999, help="run on the given port", type=int)
 
+class MongoBroker():
+    def __init__(self):
+        connection = Connection('localhost', 27017)
+        self.db = connection['struts_server']
+
 class Application(tornado.web.Application):
     def __init__(self):
-        obj_id_regex = r"[a-z0-9]+"
+        obj_id_regex = r"[a-z0img-9]+"
         handlers = [
             (r"/gcdifn/([A-Za-z0-9\-\.\_]+)", GetCategoryIdFromName),
+            (r"/view/categories", ViewCategoriesHandler),
             (r"/view/category/([A-Za-z0-9\-\.\_]+)", ViewCategoryHandler),
             (r"/edit/category/([A-Za-z0-9\-\.\_]+)", EditCategoryHandler),
         ]
@@ -26,6 +32,11 @@ class Application(tornado.web.Application):
             debug= True,
         )
         tornado.web.Application.__init__(self, handlers, **settings) 
+
+class ViewCategoriesHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        self.finish(['all'])
 
 class GetCategoryIdFromName(tornado.web.RequestHandler):
     @tornado.web.asynchronous
