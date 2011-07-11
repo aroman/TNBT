@@ -35,7 +35,13 @@ class Application(tornado.web.Application):
 
 class ViewChildrenHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
-    def get(self, parent_name):
+    def get(self, raw):
+        splits = raw.split('|')
+        try:
+            parent_name = splits[0]
+            child_name = splits[1]
+        except:
+            self.finish("You forgot the pipe, dumbass.")
         results = {"parent" : "", "children" : []}
         try:
             parent = global_topics.find_one({"name" : parent_name})
