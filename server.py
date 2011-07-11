@@ -60,6 +60,7 @@ class GlobalLocaleHandler(tornado.web.RequestHandler):
         http.fetch("http://71.224.204.102:9999/view/children/" + topic, callback=self.on_response)
     def on_response(self, response):
         if response.error: self.finish("avi fucked up")
+        print response.body
         json = escape.json_decode(response.body)
         parent = json['parent']
         children = json['children']
