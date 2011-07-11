@@ -36,11 +36,12 @@ class Application(tornado.web.Application):
 class ViewChildrenHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self, parent_name):
-        results = []
+        results = {"parent" : "", "children" : []}
         try:
-            for children in global_topics.find_one({'name' : parent_name})['children']:
-                for child in children:
-                    results.append(child['name'])
+            parent = global_topics.find_one({"name" : parent_name})
+            results["parent"] = parent["name"]
+            for child in parent["children"][0]:
+                    results["children"].append(child["name"])
         except TypeError:
             results = None
         self.finish(str(results))
