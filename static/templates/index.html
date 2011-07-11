@@ -6,9 +6,11 @@
         {% end %}
     </ul>
 
-    <form action="/view" method="post" id="viewform">
-        <input type="text" value="" name="name">
-        <input type="submit" value="View">
+    <form action="http://localhost:9999/add/comment" method="post" id="viewform">
+        <textarea name="body"></textarea>
+        <input type="hidden" name="discussion_id" value="ce2bcc1c-2805-4572-942d-dcdc745993bc">
+        <input type="hidden" name="author" value="None">
+        <input type="submit" value="Comment">
         {{ xsrf_form_html() }}
     </form>
 {% end %}

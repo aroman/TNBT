@@ -19,6 +19,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", IndexHandler),
+            (r"/comment", NewCommentHandler),
             (r"/([a-zA-Z0-9\+]+)/", GlobalLocaleHandler),
             (r"/([a-zA-Z0-9\+]+)/([a-zA-Z0-9\+]+)/", TopicHandler),
             (r"/([a-zA-Z0-9\+]+)/([a-zA-Z0-9\+]+)/([a-zA-Z0-9\+]+)/", LocalesHandler),
@@ -37,20 +38,27 @@ class IndexHandler(tornado.web.RequestHandler):
     	http = tornado.httpclient.AsyncHTTPClient()
     	http.fetch("http://localhost:9999/view/categories", callback=self.on_response)	
     def on_response(self, response):
-		if response.error: self.finish("avi fucked up")
+		if response.error: self.finish(response.error)
 		globtops = eval(response.body)
 		self.render('static/templates/index.html', globtops=globtops)
 		
-
+class NewCommentHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self):
+    	request = tornado.httpclient.HTTPRequest("http://localhost:9999/wait/comment", "POST")
+    	http = tornado.httpclient.AsyncHTTPClient()
+    	http.fetch(request, callback=self.on_response)
+    def on_response(self, response):
+    	if response.error: self.finish(response.error)
+    	self.finish(response.body)
 class ViewHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def post(self):
     	name = self.request.arguments['name'][0]
-    	print name
     	http = tornado.httpclient.AsyncHTTPClient()
     	http.fetch("http://localhost:9999/view/category/" + name, callback=self.on_response)
     def on_response(self, response):
-    	if response.error: self.finish("avi fucked up")
+    	if response.error: self.finish(response.error)
     	self.finish(response.body)
 
 
@@ -60,8 +68,7 @@ class GlobalLocaleHandler(tornado.web.RequestHandler):
         http = tornado.httpclient.AsyncHTTPClient()
         http.fetch("http://localhost:9999/view/children/" + topic, callback=self.on_response)
     def on_response(self, response):
-        if response.error: self.finish("avi fucked up")
-        print response.body
+        if response.error: self.finish(response.error)
         json = escape.json_decode(response.body)
         parent = json['parent'][0]
         children = json['children']
@@ -75,13 +82,12 @@ class TopicHandler(tornado.web.RequestHandler):
         http = tornado.httpclient.AsyncHTTPClient()
         http.fetch("http://localhost:9999/view/children/" + global_topic + "/" + global_locale , callback=self.on_response)
     def on_response(self, response):
-        print response.request.url
+        if response.error: self.finish(response.error)
         json = escape.json_decode(response.body)
         parent = json['parent']
         topics = json['children']
         glob_locale = os.path.split(response.request.url)[1]
         glob_topic = os.path.split(os.path.split(response.request.url)[0])[1]
-        print glob_topic, glob_locale
         self.render("static/templates/topic.html", glob_locale=glob_locale, glob_topic=glob_topic, topics=topics)
         
         
@@ -91,6 +97,7 @@ class LocalesHandler(tornado.web.RequestHandler):
         http = tornado.httpclient.AsyncHTTPClient()
         http.fetch("http://localhost:9999/view/children/" + global_topic + "/" + global_locale + "/" + topic , callback=self.on_response)        
     def on_response(self, response):
+        if response.error: self.finish(response.error)
         json = escape.json_decode(response.body)
         glob_topic = json['parent']
         locales = json['children']
