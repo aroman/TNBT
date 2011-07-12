@@ -52,7 +52,6 @@ class CommentMixin(object):
 
     def new_comments(self, comments):
         cls = CommentMixin
-        print comments[0]["discussion_id"]
         logging.info("Sending new comment to %r listeners", len(cls.waiters))
         for callback in cls.waiters:
             try:
