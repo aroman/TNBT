@@ -1,0 +1,3 @@
+{% for i in range(len(comments)) %}
+    <div style="padding-top:5px; padding-bottom:5px;" id="{{comments[i]["_id"]}}"><strong style="padding-right:20px;">{{comments[i]["author"]}}:</strong>{{comments[i]["body"]}}</div>
+{% end %}

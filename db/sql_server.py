@@ -20,7 +20,6 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/add/comment", AddCommentHandler),
-            (r"/wait/comment/([\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12})", CommentHandler),
             (r"/view/children/([A-Za-z0-9\-\.\_\%]+)", ViewGlobalLocalesHandler),
             (r"/view/children/([A-Za-z0-9\-\.\_\%]+)/([A-Za-z0-9\-\.\_\%]+)", ViewTopicsHandler),
             (r"/view/children/([A-Za-z0-9\-\.\_\%]+)/([A-Za-z0-9\-\.\_\%]+)/([A-Za-z0-9\-\.\_\%]+)", ViewLocalesHandler),
@@ -34,37 +33,9 @@ class Application(tornado.web.Application):
         tornado.web.Application.__init__(self, handlers, **settings)
 
 
-class CommentMixin(object):
-    waiters = []
-    cache = []
-    cache_size = 200
-    def wait_for_comments(self, callback, discussion_id, cursor=None):
-        cls = CommentMixin
-        if cursor:
-            index = 0
-            for i in xrange(len(cls.cache)):
-                index = len(cls.cache) - i - 1
-                if cls.cache[index]["id"] == cursor: break
-            recent = cls.cache[index + 1:]
-            if recent:
-                callback(recent)
-                return
-        cls.waiters.append([callback, discussion_id])
 
-    def new_comments(self, comments):
-        cls = CommentMixin
-        print cls.waiters
-        for callback in cls.waiters:
-            try:
-                callback[0](comments)
-            except:
-                logging.error("Error in waiter callback", exc_info=True)
-        cls.waiters = []
-        cls.cache.extend(comments)
-        if len(cls.cache) > self.cache_size:
-            cls.cache = cls.cache[-self.cache_size:]
 
-class BaseHandler(tornado.web.RequestHandler, CommentMixin):
+class BaseHandler(tornado.web.RequestHandler):
     def initialize(self):
         self.dbc = dbmod.connect('db.db')
     @property
@@ -135,9 +106,15 @@ class ViewLocalesHandler(BaseHandler):
         topic_id = db.fetchone()[0]
         db.execute('select name from locale where parent_id = ?', [topic_id])
         locales = db.fetchall()
+        db.execute('select discussion_id from topic where _id = ?', [topic_id])
+        discussion = db.fetchone()[0]
+        db.execute('select body, author, _id from comment where discussion_id = ?', [discussion])
+        comments = db.fetchall()
         finish = {
             "parent": global_topic,
-            "children": locales
+            "children": locales,
+            "comments": comments,
+            "discussion_id": discussion
         }
         
         self.finish(finish)
@@ -173,15 +150,6 @@ class ViewCategoriesHandler(BaseHandler):
             results.append(name[0])
         print results
         self.finish(str(results))
-        
-class CommentHandler(tornado.web.RequestHandler, CommentMixin):
-    @tornado.web.asynchronous
-    def get(self, discussion_id):
-        cursor = self.get_argument("cursor", None)
-        self.wait_for_comments(self.async_callback(self.on_new_comments), discussion_id, cursor=cursor)
-
-    def on_new_comments(self, comments):
-        self.finish(dict(comments=comments))
 
 def main():
     tornado.options.parse_command_line()

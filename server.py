@@ -11,6 +11,8 @@ import tornado.template as template
 import tornado.escape as escape
 from tornado.options import define, options
 import os
+import logging
+import uuid
 import sqlite3 as db
 #27017
 define("port", default=8888, help="run on the given port", type=int)
@@ -32,6 +34,36 @@ class Application(tornado.web.Application):
         )
         tornado.web.Application.__init__(self, handlers, **settings) 
 
+class CommentMixin(object):
+    waiters = []
+    
+    cache = []
+    cache_size = 200
+    def wait_for_comments(self, callback, discussion_id, cursor=None):
+        cls = CommentMixin
+        if cursor:
+            index = 0
+            for i in xrange(len(cls.cache)):
+                index = len(cls.cache) - i - 1
+                if cls.cache[index]["id"] == cursor: break
+            recent = cls.cache[index + 1:]
+            if recent:
+                callback(recent)
+                return
+        cls.waiters.append([callback, discussion_id])
+    def new_comments(self, comments):
+        cls = CommentMixin
+        for callback in cls.waiters:
+            try:
+                if callback[1] == comments[0]['discussion_id']:
+                    cls.waiters.remove(callback)
+                    callback[0](comments)
+            except:
+                logging.error("Error in waiter callback", exc_info=True)
+        cls.cache.extend(comments)
+        if len(cls.cache) > self.cache_size:
+            cls.cache = cls.cache[-self.cache_size:]
+
 
 class IndexHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
@@ -43,27 +75,31 @@ class IndexHandler(tornado.web.RequestHandler):
 		globtops = eval(response.body)
 		self.render('static/templates/index.html', globtops=globtops)
 		
-class WaitForCommentsHandler(tornado.web.RequestHandler):
+
+class WaitForCommentsHandler(tornado.web.RequestHandler, CommentMixin):
     @tornado.web.asynchronous
     def post(self):
         discussion_id = self.request.arguments['discussion_id'][0]
-    	_request = tornado.httpclient.HTTPRequest("http://localhost:9999/wait/comment/" + discussion_id)
-    	http = tornado.httpclient.AsyncHTTPClient()
-    	http.fetch(_request, callback=self.on_response)
-    def on_response(self, response):
-    	if response.error: self.finish(response.error)
-    	print "HOLYFUCKITWORKED"
-    	self.finish(response.body)
+        cursor = self.get_argument("cursor", None)
+        self.wait_for_comments(self.async_callback(self.on_new_comments), discussion_id, cursor=cursor)
 
-class NewCommentHandler(tornado.web.RequestHandler):
+    def on_new_comments(self, comments):
+        if self.request.connection.stream.closed():
+            return 
+        self.render('static/templates/comments_only.html', comments=comments)
+
+
+class NewCommentHandler(tornado.web.RequestHandler, CommentMixin):
     @tornado.web.asynchronous
     def post(self):
-    	_request = tornado.httpclient.HTTPRequest("http://localhost:9999/add/comment", "POST")
-    	http = tornado.httpclient.AsyncHTTPClient()
-    	http.fetch(_request, callback=self.on_response)
-    def on_response(self, response):
-    	if response.error: self.finish(response.error)
-    	self.finish(response.body)
+        comment = {
+            "_id": str(uuid.uuid4()),
+            "discussion_id": self.get_argument("discussion_id"),
+            "author": "Anonymous",
+            "body": self.get_argument("body")
+        }
+        self.new_comments([comment])
+
 
 class ViewHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
@@ -74,6 +110,7 @@ class ViewHandler(tornado.web.RequestHandler):
     def on_response(self, response):
     	if response.error: self.finish(response.error)
     	self.finish(response.body)
+
 
 
 class GlobalLocaleHandler(tornado.web.RequestHandler):
@@ -115,9 +152,12 @@ class LocalesHandler(tornado.web.RequestHandler):
         json = escape.json_decode(response.body)
         glob_topic = json['parent']
         locales = json['children']
+        comments = json['comments']
+        discussion_id = json["discussion_id"]
         topic = os.path.split(response.request.url)[1]
         global_locale = os.path.split(os.path.split(response.request.url)[0])[1]
-        self.render('static/templates/locale.html', glob_locale = global_locale, topic = topic, glob_topic = glob_topic, locales = locales)
+        self.render('static/templates/locale.html', glob_locale = global_locale, topic = topic, glob_topic = glob_topic, locales = locales, comments=comments, discussion_id=discussion_id)
+
 
 def main():
     tornado.options.parse_command_line()

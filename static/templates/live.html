@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+    <title>{% block title %}TNBT{% end %}</title>
+  </head>
+<body>
+{% block body %}
+
+{% end %}
+<script type="text/javascript">
+$(function()
+{
+    function newRequest()
+    {
+    	console.log("newrequest");
+    	$.post("/waitforcomments", {"discussion_id": "{{ discussion_id }}" }, function(data) {
+                
+                $("#discussion").append(data);
+                newRequest();
+                
+		});
+    }
+	newRequest();
+});
+</script>
+</body>
