@@ -37,8 +37,7 @@ class CommentMixin(object):
     waiters = []
     cache = []
     cache_size = 200
-
-    def wait_for_comments(self, callback, cursor=None):
+    def wait_for_comments(self, callback, discussion_id, cursor=None,):
         cls = CommentMixin
         if cursor:
             index = 0
@@ -49,14 +48,19 @@ class CommentMixin(object):
             if recent:
                 callback(recent)
                 return
-        cls.waiters.append(callback)
+        cls.waiters.append([callback, discussion_id])
 
     def new_comments(self, comments):
         cls = CommentMixin
+        print comments[0]["discussion_id"]
         logging.info("Sending new comment to %r listeners", len(cls.waiters))
         for callback in cls.waiters:
             try:
-                callback(comments)
+                comment_list = []
+                for comment in comments:
+                    if callback[1] == comment["discussion_id"]:
+                        comment_list.append(comment)
+                callback[0](comment_list)
             except:
                 logging.error("Error in waiter callback", exc_info=True)
         cls.waiters = []
@@ -77,7 +81,6 @@ class IndexHandler(tornado.web.RequestHandler):
 
 
 class NewCommentHandler(tornado.web.RequestHandler, CommentMixin):
-    @tornado.web.asynchronous
     def post(self):
         comment = {
             "_id": str(uuid.uuid4()),
@@ -92,7 +95,7 @@ class WaitForCommentsHandler(tornado.web.RequestHandler, CommentMixin):
     def post(self):
         discussion_id = self.request.arguments['discussion_id'][0]
         cursor = self.get_argument("cursor", None)
-        self.wait_for_comments(self.async_callback(self.on_new_comments), cursor=cursor)
+        self.wait_for_comments(self.async_callback(self.on_new_comments), discussion_id, cursor=cursor)
 
     def on_new_comments(self, comments):
         if self.request.connection.stream.closed():

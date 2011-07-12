@@ -15,6 +15,7 @@ $(function()
     	console.log("newrequest");
     	$.post("/waitforcomments", {"discussion_id": "{{ discussion_id }}" }, function(data) {
                 
+                alert(data);
                 $("#discussion").append(data);
                 newRequest();
                 

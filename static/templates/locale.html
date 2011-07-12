@@ -30,7 +30,6 @@ $(function()
 {
     $("#comment_button").click(function(){
     	$.post("/comment", $("#comment_form").serialize() , function(data) {
-            alert(data);
         });    
     });
 });
