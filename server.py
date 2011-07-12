@@ -30,16 +30,15 @@ class Application(tornado.web.Application):
         ]
         
         settings = dict(
-        	xsrf_cookies=True,
         )
         tornado.web.Application.__init__(self, handlers, **settings) 
 
 class CommentMixin(object):
     waiters = []
-    
     cache = []
     cache_size = 200
-    def wait_for_comments(self, callback, discussion_id, cursor=None):
+
+    def wait_for_comments(self, callback, cursor=None):
         cls = CommentMixin
         if cursor:
             index = 0
@@ -50,16 +49,17 @@ class CommentMixin(object):
             if recent:
                 callback(recent)
                 return
-        cls.waiters.append([callback, discussion_id])
+        cls.waiters.append(callback)
+
     def new_comments(self, comments):
         cls = CommentMixin
+        logging.info("Sending new comment to %r listeners", len(cls.waiters))
         for callback in cls.waiters:
             try:
-                if callback[1] == comments[0]['discussion_id']:
-                    cls.waiters.remove(callback)
-                    callback[0](comments)
+                callback(comments)
             except:
                 logging.error("Error in waiter callback", exc_info=True)
+        cls.waiters = []
         cls.cache.extend(comments)
         if len(cls.cache) > self.cache_size:
             cls.cache = cls.cache[-self.cache_size:]
@@ -74,19 +74,6 @@ class IndexHandler(tornado.web.RequestHandler):
 		if response.error: self.finish(response.error)
 		globtops = eval(response.body)
 		self.render('static/templates/index.html', globtops=globtops)
-		
-
-class WaitForCommentsHandler(tornado.web.RequestHandler, CommentMixin):
-    @tornado.web.asynchronous
-    def post(self):
-        discussion_id = self.request.arguments['discussion_id'][0]
-        cursor = self.get_argument("cursor", None)
-        self.wait_for_comments(self.async_callback(self.on_new_comments), discussion_id, cursor=cursor)
-
-    def on_new_comments(self, comments):
-        if self.request.connection.stream.closed():
-            return 
-        self.render('static/templates/comments_only.html', comments=comments)
 
 
 class NewCommentHandler(tornado.web.RequestHandler, CommentMixin):
@@ -100,6 +87,17 @@ class NewCommentHandler(tornado.web.RequestHandler, CommentMixin):
         }
         self.new_comments([comment])
 
+class WaitForCommentsHandler(tornado.web.RequestHandler, CommentMixin):
+    @tornado.web.asynchronous
+    def post(self):
+        discussion_id = self.request.arguments['discussion_id'][0]
+        cursor = self.get_argument("cursor", None)
+        self.wait_for_comments(self.async_callback(self.on_new_comments), cursor=cursor)
+
+    def on_new_comments(self, comments):
+        if self.request.connection.stream.closed():
+            return 
+        self.render('static/templates/comments_only.html', comments=comments)
 
 class ViewHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
