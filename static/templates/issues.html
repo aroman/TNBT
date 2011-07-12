@@ -1,0 +1,37 @@
+{% extends "live.html" %}
+{% block title %}{{ locale }}{% end %}
+
+    <a href="/">TNBT</a> --> <a href="/{{ url_escape(glob_topic) }}/">{{ glob_topic }}</a> --> <a href="/{{ url_escape(glob_topic) }}/{{ url_escape(glob_locale) }}/">{{ glob_locale }}</a> --> 
+    <a href="/{{ url_escape(glob_topic) }}/{{ url_escape(glob_locale) }}/{{ url_escape(topic) }}/">{{ topic }}</a> --> 
+    <a href="/{{ url_escape(glob_topic) }}/{{ url_escape(glob_locale) }}/{{ url_escape(topic) }}/{{ url_escape(locale) }}/">{{ locale }}</a>
+    <ul>
+        {% for issue in issues %}
+            <li><a href="{{ url_escape(issue[0]) }}/">{{ issue[0] }}</a></li>
+        {% end %}
+    </ul>    
+    
+    <br><br><br><br>
+    <h1>Discussion:</h1>
+        <div id="discussion" style="list-style:none;">
+            {% for comment in comments %}
+                <div style="padding-top:5px; padding-bottom:5px;" id="{{comment[2]}}"><strong style="padding-right:20px;">{{comment[1]}}:</strong>{{comment[0]}}</div>
+            {% end %}
+        </div>
+        
+        <form id="comment_form" action="/comment" method="post">
+            <textarea name="body"></textarea>
+            <input type="hidden" name="discussion_id" value="{{ discussion_id }}">
+            <input type="hidden" name="author" value="None">
+        </form>
+        <button id="comment_button">Comment</button>
+
+<script type="text/javascript">
+$(function()
+{
+    $("#comment_button").click(function(){
+    	$.post("/comment", $("#comment_form").serialize() , function(data) {
+        });    
+    });
+});
+</script>
+{% end %}

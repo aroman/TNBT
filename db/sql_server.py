@@ -132,9 +132,15 @@ class ViewIssuesHandler(BaseHandler):
         locale_id = db.fetchone()[0]
         db.execute('select _id from issue where parent_id = ?', [locale_id])
         issues = db.fetchall()
+        db.execute('select discussion_id from locale where _id = ?', [locale_id])
+        discussion = db.fetchone()[0]
+        db.execute('select body, author, _id from comment where discussion_id = ?', [discussion])
+        comments = db.fetchall()
         finish = {
             "parent": global_topic,
-            "children": issues
+            "children": issues,
+            "comments": comments,
+            "discussion_id": discussion
         }
         
         self.finish(finish)
