@@ -172,7 +172,8 @@ class LocalesHandler(tornado.web.RequestHandler):
         discussion_id = json["discussion_id"]
         topic = os.path.split(response.request.url)[1]
         global_locale = os.path.split(os.path.split(response.request.url)[0])[1]
-        self.render('static/templates/locale.html', glob_locale = global_locale, topic = topic, glob_topic = glob_topic, locales = locales, comments=comments, discussion_id=discussion_id)
+        self.render('static/templates/locale.html', glob_locale = global_locale, topic = topic, glob_topic = glob_topic, 
+            locales = locales, comments=comments, discussion_id=discussion_id)
 
 
 class IssuesHandler(tornado.web.RequestHandler):
@@ -180,7 +181,8 @@ class IssuesHandler(tornado.web.RequestHandler):
     
     def get(self, global_topic, global_locale, topic, locale):
         http = tornado.httpclient.AsyncHTTPClient()
-        http.fetch("http://localhost:9999/view/children/" + global_topic + "/" + global_locale + "/" + topic + "/" + locale , callback=self.on_response)        
+        http.fetch("http://localhost:9999/view/children/" + global_topic + "/" + global_locale + "/" + topic + "/" + locale , 
+            callback=self.on_response)        
     
     def on_response(self, response):
         if response.error: self.finish(response.error)
@@ -192,7 +194,8 @@ class IssuesHandler(tornado.web.RequestHandler):
         locale = os.path.split(response.request.url)[1]
         topic = os.path.split(os.path.split(response.request.url)[0])[1]
         global_locale = os.path.split(os.path.split(os.path.split(response.request.url)[0])[0])[1]
-        self.render('static/templates/locale.html', glob_locale = global_locale, topic = topic, glob_topic = glob_topic, locales = locales, comments=comments, discussion_id=discussion_id)
+        self.render('static/templates/locale.html', glob_locale = global_locale, topic = topic, glob_topic = glob_topic,
+            locales = locales, comments=comments, discussion_id=discussion_id)
 
 
 def main():
