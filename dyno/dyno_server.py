@@ -2,19 +2,21 @@
 # -*- coding: utf-8 -*-
 # Copyright 2011 Hunter Lang and Avi Romanoff
 # AGPL 3 License. See LICENSE.
-import tornado.httpserver
-import tornado.httpclient
-import tornado.ioloop
-import tornado.options
-import tornado.web
+from tornado.options import define, options
 import tornado.template as template
 import tornado.escape as escape
-from tornado.options import define, options
+import tornado.httpclient
+import tornado.httpserver
+import tornado.options
+import tornado.ioloop
+import tornado.web
 import os
-import logging
 import uuid
+import logging
 import sqlite3 as db
-#27017
+
+API_ROOT = "http://localhost:9999"
+
 define("port", default=8888, help="run on the given port", type=int)
 
 class Application(tornado.web.Application):
@@ -31,11 +33,16 @@ class Application(tornado.web.Application):
         ]
         
         settings = dict(
+            debug = True, # For auto-reload
         )
         tornado.web.Application.__init__(self, handlers, **settings) 
 
 
 class CommentMixin(object):
+    """
+        Magical unicorn that does magical things.
+    """
+    
     waiters = []
     cache = []
     cache_size = 200
@@ -72,11 +79,14 @@ class CommentMixin(object):
 
 
 class IndexHandler(tornado.web.RequestHandler):
+    """
+        Index requesr handler for the 1st tier category, Global Topic.
+    """
     @tornado.web.asynchronous
     
     def get(self):
     	http = tornado.httpclient.AsyncHTTPClient()
-    	http.fetch("http://localhost:9999/view/categories", callback=self.on_response)	
+    	http.fetch(API_ROOT+"/view/categories", callback=self.on_response)	
     
     def on_response(self, response):
 		if response.error: self.finish(response.error)
@@ -85,6 +95,9 @@ class IndexHandler(tornado.web.RequestHandler):
 
 
 class NewCommentHandler(tornado.web.RequestHandler, CommentMixin):
+    """
+        Request handler for the creation of new comments.
+    """
     
     def post(self):
         comment = {
@@ -116,7 +129,7 @@ class ViewHandler(tornado.web.RequestHandler):
     def post(self):
     	name = self.request.arguments['name'][0]
     	http = tornado.httpclient.AsyncHTTPClient()
-    	http.fetch("http://localhost:9999/view/category/" + name, callback=self.on_response)
+    	http.fetch(API_ROOT + "/view/category/" + name, callback=self.on_response)
     
     def on_response(self, response):
     	if response.error: self.finish(response.error)
@@ -124,11 +137,14 @@ class ViewHandler(tornado.web.RequestHandler):
 
 
 class GlobalLocaleHandler(tornado.web.RequestHandler):
+    """
+        Request handler for the 2rd tier category, Global Locale.
+    """
     @tornado.web.asynchronous
     
     def get(self, topic):
         http = tornado.httpclient.AsyncHTTPClient()
-        http.fetch("http://localhost:9999/view/children/" + topic, callback=self.on_response)
+        http.fetch(API_ROOT + "/view/children/" + topic, callback=self.on_response)
     
     def on_response(self, response):
         if response.error: self.finish(response.error)
@@ -140,11 +156,14 @@ class GlobalLocaleHandler(tornado.web.RequestHandler):
 
 
 class TopicHandler(tornado.web.RequestHandler):
+    """
+        Request handler for the 3rd tier category, Topic.
+    """
     @tornado.web.asynchronous
     
     def get(self, global_topic, global_locale):
         http = tornado.httpclient.AsyncHTTPClient()
-        http.fetch("http://localhost:9999/view/children/" + global_topic + "/" + global_locale , callback=self.on_response)
+        http.fetch(API_ROOT + "/view/children/" + global_topic + "/" + global_locale , callback=self.on_response)
     
     def on_response(self, response):
         if response.error: self.finish(response.error)
@@ -157,11 +176,14 @@ class TopicHandler(tornado.web.RequestHandler):
         
         
 class LocalesHandler(tornado.web.RequestHandler):
+    """
+        Request handler for the 4th tier category, Locale.
+    """
     @tornado.web.asynchronous
     
     def get(self, global_topic, global_locale, topic):
         http = tornado.httpclient.AsyncHTTPClient()
-        http.fetch("http://localhost:9999/view/children/" + global_topic + "/" + global_locale + "/" + topic , callback=self.on_response)        
+        http.fetch(API_ROOT + "/view/children/" + global_topic + "/" + global_locale + "/" + topic , callback=self.on_response)        
     
     def on_response(self, response):
         if response.error: self.finish(response.error)
@@ -177,11 +199,14 @@ class LocalesHandler(tornado.web.RequestHandler):
 
 
 class IssuesHandler(tornado.web.RequestHandler):
+    """
+        Request handler for the 5th tier category, Issue.
+    """
     @tornado.web.asynchronous
-    
+
     def get(self, global_topic, global_locale, topic, locale):
         http = tornado.httpclient.AsyncHTTPClient()
-        http.fetch("http://localhost:9999/view/children/" + global_topic + "/" + global_locale + "/" + topic + "/" + locale , 
+        http.fetch(API_ROOT + "/view/children/" + global_topic + "/" + global_locale + "/" + topic + "/" + locale , 
             callback=self.on_response)        
     
     def on_response(self, response):
@@ -197,11 +222,13 @@ class IssuesHandler(tornado.web.RequestHandler):
         self.render('static/templates/locale.html', glob_locale = global_locale, topic = topic, glob_topic = glob_topic,
             locales = locales, comments=comments, discussion_id=discussion_id)
 
-
 def main():
     tornado.options.parse_command_line()
+    logging.info("Dyno server starting up") 
     http_server = tornado.httpserver.HTTPServer(Application(), xheaders=True)
     http_server.listen(options.port)
+    logging.info("Serving on port %i" % options.port)
     tornado.ioloop.IOLoop.instance().start()
+
 if __name__ == "__main__":
     main()
