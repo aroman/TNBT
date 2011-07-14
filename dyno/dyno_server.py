@@ -32,9 +32,10 @@ class Application(tornado.web.Application):
             (r"/view", ViewHandler),
         ]
         
-        settings = dict(
-            debug = True, # For auto-reload
-        )
+        settings = {
+            "debug" : True, # For auto-reload
+            "static_path": os.path.join(os.path.dirname(__file__), "static"),
+        }
         tornado.web.Application.__init__(self, handlers, **settings) 
 
 

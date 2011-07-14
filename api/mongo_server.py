@@ -3,19 +3,24 @@
 # Copyright 2011 Hunter Lang and Avi Romanoff
 # AGPL 3 License. See LICENSE.
 from tornado.options import define, options
-import tornado.template as template
 from tornado.escape import json_encode
-import tornado.httpserver
-import logging
-import tornado.ioloop
-import tornado.options
-import tornado.web
+import tornado.template as template
 import tornado.escape as escape
-import sqlite3 as dbmod
+import tornado.httpserver
+import tornado.options
+import tornado.ioloop
+import tornado.web
+from pprint import pprint as pp
+from pymongo import Connection
+import logging
 import uuid
+
+import fixtures
 
 define("port", default=9999, help="run on the given port", type=int)
 
+MONGO_SERVER = "localhost"
+MONGO_PORT = 27017
 
 class Application(tornado.web.Application):
     def __init__(self):
@@ -33,15 +38,16 @@ class Application(tornado.web.Application):
         }
         tornado.web.Application.__init__(self, handlers, **settings)
 
-
-
-
 class BaseHandler(tornado.web.RequestHandler):
-    def initialize(self):
-        self.dbc = dbmod.connect('db.db')
-    @property
-    def db(self):
-        return self.dbc.cursor()
+    connection = Connection(MONGO_SERVER, MONGO_PORT)
+    db = connection['struts_server']
+    categories = db['categories']
+
+    for x in categories.find(): pp(x)
+
+#    categories.drop()
+#    for global_topic in fixtures.global_topics:
+#        categories.insert({'name' : global_topic, 'children' : fixtures.global_locales})
 
 class AddCommentHandler(BaseHandler):
     @tornado.web.asynchronous
@@ -63,6 +69,7 @@ class AddCommentHandler(BaseHandler):
         }
         self.new_comments([comment])
         self.finish(comment)
+
 class ViewGlobalLocalesHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self, global_topic):
@@ -119,6 +126,7 @@ class ViewLocalesHandler(BaseHandler):
         }
         
         self.finish(finish)
+
 class ViewIssuesHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self, global_topic, global_locale, topic, locale):
@@ -147,18 +155,17 @@ class ViewIssuesHandler(BaseHandler):
         self.finish(finish)
 
 class ViewCategoriesHandler(BaseHandler):
+
     @tornado.web.asynchronous
     def get(self):
-        db = self.db
         results = []
-        db.execute('select name from global_topic')
-        names = db.fetchall()
-        for name in names:
-            results.append(name[0])
-        print results
+        for global_topic in self.categories.find():
+            results.append(global_topic['name'])
+        pp(results)
         self.finish(str(results))
 
 def main():
+    tornado.options.parse_command_line()
     logging.info("API server starting up") 
     http_server = tornado.httpserver.HTTPServer(Application(), xheaders=True)
     http_server.listen(options.port)
