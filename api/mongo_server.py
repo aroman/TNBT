@@ -43,7 +43,7 @@ class BaseHandler(tornado.web.RequestHandler):
     db = connection['struts_server']
     categories = db['categories']
 
-    for x in categories.find(): pp(x)
+#    for x in categories.find(): pp(x)
 
 #    categories.drop()
 #    for global_topic in fixtures.global_topics:
@@ -72,17 +72,27 @@ class AddCommentHandler(BaseHandler):
 
 class ViewGlobalLocalesHandler(BaseHandler):
     @tornado.web.asynchronous
+#    def get(self, global_topic):
+#        db = self.db
+#        db.execute('select _id from global_topic where name = ?', [global_topic])
+#        topic_id = db.fetchone()[0]
+#        db.execute('select name from global_locale where parent_id = ?', [topic_id])
+#        glob_locales = db.fetchall()
+#        finish = {
+#            "parent": global_topic,
+#            "children": glob_locales
+#        }
+#        
+#        self.finish(finish)
+
     def get(self, global_topic):
-        db = self.db
-        db.execute('select _id from global_topic where name = ?', [global_topic])
-        topic_id = db.fetchone()[0]
-        db.execute('select name from global_locale where parent_id = ?', [topic_id])
-        glob_locales = db.fetchall()
+        results = []
+        for child in self.categories.find_one({'name' : global_topic})['children']:
+            results.append(child)
         finish = {
-            "parent": global_topic,
-            "children": glob_locales
+            "parent" : global_topic,
+            "children" : results
         }
-        
         self.finish(finish)
 
 class ViewTopicsHandler(BaseHandler):

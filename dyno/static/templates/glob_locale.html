@@ -5,7 +5,7 @@
     <a href="/">TNBT</a> --> <a href="/{{ url_escape(glob_topic) }}/">{{ glob_topic }}</a>
     <ul>
         {% for locale in globlocales %}
-            <li><a href="{{ url_escape(locale[0]) }}/">{{ locale[0] }}</a></li>
+            <li><a href="{{ url_escape(locale) }}/">{{ locale }}</a></li>
         {% end %}
     </ul>    
 

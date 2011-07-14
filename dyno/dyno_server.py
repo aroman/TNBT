@@ -23,7 +23,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", IndexHandler),
-            (r"/waitforcomments", WaitForCommentsHandler),
+            (r"/waitforcomments", IndexHandler), # The spinning was killing me
             (r"/comment", NewCommentHandler),
             (r"/([a-zA-Z0-9\+]+)/", GlobalLocaleHandler),
             (r"/([a-zA-Z0-9\+]+)/([a-zA-Z0-9\+]+)/", TopicHandler),
@@ -150,7 +150,7 @@ class GlobalLocaleHandler(tornado.web.RequestHandler):
     def on_response(self, response):
         if response.error: self.finish(response.error)
         json = escape.json_decode(response.body)
-        parent = json['parent'][0]
+        parent = json['parent']
         children = json['children']
         glob_topic = os.path.split(response.request.url)[1]
         self.render("static/templates/glob_locale.html", globlocales=children, glob_topic=glob_topic)
