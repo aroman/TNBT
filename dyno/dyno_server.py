@@ -163,6 +163,7 @@ class TopicHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     
     def get(self, global_topic, global_locale):
+        global_locale = global_locale.replace(" ", "%20") # XXX
         http = tornado.httpclient.AsyncHTTPClient()
         http.fetch(API_ROOT + "/view/children/" + global_topic + "/" + global_locale , callback=self.on_response)
     

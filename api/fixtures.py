@@ -6,7 +6,7 @@ global_topics = (
     'Education',
     'Housing',
     'Environment',
-    'Health'
+    'Health',
 )
 
 global_locales = (
@@ -27,5 +27,12 @@ global_locales = (
     'Israel',
     'Italy',
     'Australia',
-    'Argentina'
+    'Argentina',
+)
+
+environment_topics = (
+    'Pollution',
+    'Global Warming',
+    'Natural Resources',
+    'Waste Management',
 )

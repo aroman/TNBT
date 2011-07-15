@@ -45,20 +45,19 @@ class BaseHandler(tornado.web.RequestHandler):
 
     
     # Currently down to tier-3
-    """
-    categories.drop()
-    for global_topic in fixtures.global_topics:
-        global_locales = []
-        for global_locale in fixtures.global_locales:
-            if global_topic is "Environment":
-                topics = [{'name' : "Pollution"}, {'name' : "Global Warming"}, {'name' : "Natural Resources"}, {'name' : "Waste Management"}]
-            else:
-                topics = []
-            global_locales.append({'name' : global_locale, 'topics' : topics})
-        categories.insert({'name' : global_topic, 'children' : global_locales})
 
-    for x in categories.find(): pp(x)
-    """
+#    categories.drop()
+#    for global_topic in fixtures.global_topics:
+#        for global_locale in fixtures.global_locales:
+#            print global_locale
+#            if global_topic == 'Environment':
+#                for environment_topic in fixtures.environment_topics:
+#                    categories.insert({'global_topic' : global_topic, 'global_locale' : global_locale, 'topic' : environment_topic})
+#            else:
+#                categories.insert({'global_topic' : global_topic, 'global_locale' : global_locale})
+
+#    for x in categories.find(): pp(x)
+
 
 class AddCommentHandler(BaseHandler):
     @tornado.web.asynchronous
@@ -86,8 +85,9 @@ class ViewGlobalLocalesHandler(BaseHandler):
 
     def get(self, global_topic):
         results = []
-        for child in self.categories.find_one({'name' : global_topic})['children']:
-            results.append(child['name'])
+        for child in self.categories.find({'global_topic' : global_topic}):
+            if child['global_locale'] not in results:
+                results.append(child['global_locale'])
         finish = {
             "parent" : global_topic,
             "children" : results,
@@ -95,36 +95,19 @@ class ViewGlobalLocalesHandler(BaseHandler):
         self.finish(finish)
 
 class ViewTopicsHandler(BaseHandler):
+
     @tornado.web.asynchronous
     def get(self, global_topic, global_locale):
-        db = self.db
-        db.execute('select _id from global_topic where name = ?', [global_topic])
-        topic_id = db.fetchone()[0]
-        db.execute('select _id from global_locale where parent_id = ? and name = ?', [topic_id, global_locale])
-        locale_id = db.fetchone()[0]
-        db.execute('select name from topic where parent_id = ?', [locale_id])
-        topics = db.fetchall()
+        results = []
+        for child in self.categories.find({'global_topic' : global_topic, 'global_locale' : global_locale}):
+            if child['topic'] not in results:
+                results.append(child['topic'])
         finish = {
-            "parent": global_topic,
-            "children": topics
+            "parent" : global_topic,
+            "children" : results,
         }
-        
         self.finish(finish)
-
-#    def get(self, global_topic, global_locale):
-#        results = []
-#        for child in self.categories.find_one({'name' : global_topic, 'children' : })['children']:
-#            results.append(child)
-#        finish = {
-#            "parent" : global_topic,
-#            "children" : results
-#        }
-#        finish = {
-#            "parent": global_topic,
-#            "children": topics
-#        }
-        
-#        self.finish(finish)
+        self.finish(finish)
 
 class ViewLocalesHandler(BaseHandler):
     @tornado.web.asynchronous
@@ -184,8 +167,8 @@ class ViewCategoriesHandler(BaseHandler):
     def get(self):
         results = []
         for global_topic in self.categories.find():
-            results.append(global_topic['name'])
-        pp(results)
+            if global_topic['global_topic'] not in results:
+                results.append(global_topic['global_topic'])
         self.finish(str(results))
 
 def main():
