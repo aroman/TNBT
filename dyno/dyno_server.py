@@ -23,7 +23,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", IndexHandler),
-            (r"/waitforcomments", IndexHandler), # The spinning was killing me
+            (r"/waitforcomments", IndexHandler), # The spinning was killing me - switch to firefox. there's no spinning and it's far less bloated than chrome
             (r"/comment", NewCommentHandler),
             (r"/([a-zA-Z0-9\+]+)/", GlobalLocaleHandler),
             (r"/([a-zA-Z0-9\+]+)/([a-zA-Z0-9\+]+)/", TopicHandler),
@@ -42,13 +42,22 @@ class Application(tornado.web.Application):
 class CommentMixin(object):
     """
         Magical unicorn that does magical things.
+        This is a serious part of the server. Try not to fuck with it.
+        
+        See method docstrings below for a real explanation.
     """
     
     waiters = []
     cache = []
     cache_size = 200
     
-    def wait_for_comments(self, callback, discussion_id, cursor=None,):
+    """
+        This method takes a callback and discussion_id as arguments.
+        It is called by WaitForCommentsHandler when a client sends a longpolling request.
+        It adds discussion_id and callback, which is a function wrapper, to the waiters queue.
+    """
+    
+    def wait_for_comments(self, callback, discussion_id, cursor=None):
         cls = CommentMixin
         if cursor:
             index = 0
@@ -61,6 +70,15 @@ class CommentMixin(object):
                 return
         cls.waiters.append([callback, discussion_id])
 
+    """
+        This method takes comments as arguments.
+        It is called by NewCommentHandler when a client posts a new comment.
+        It iterates through the waiters queue, checking to see if the discussion_id 
+        in the queue matches the one in the comment. If it does, this means the server
+        has found relevant updates, so it sends them to the given callback.
+        
+        Boom. magic explained.
+    """
     def new_comments(self, comments):
         cls = CommentMixin
         logging.info("Sending new comment to %r listeners", len(cls.waiters))
@@ -80,14 +98,14 @@ class CommentMixin(object):
 
 
 class IndexHandler(tornado.web.RequestHandler):
-    """
-        Index requesr handler for the 1st tier category, Global Topic.
-    """
     @tornado.web.asynchronous
+    """
+        Index request handler for the 1st tier category, Global Topic.
+    """
     
     def get(self):
     	http = tornado.httpclient.AsyncHTTPClient()
-    	http.fetch(API_ROOT+"/view/categories", callback=self.on_response)	
+    	http.fetch(API_ROOT + "/view/categories", callback=self.on_response)	
     
     def on_response(self, response):
 		if response.error: self.finish(response.error)
@@ -98,6 +116,8 @@ class IndexHandler(tornado.web.RequestHandler):
 class NewCommentHandler(tornado.web.RequestHandler, CommentMixin):
     """
         Request handler for the creation of new comments.
+        
+        TODO: make a call to the api that adds comments to mongo
     """
     
     def post(self):
@@ -112,6 +132,11 @@ class NewCommentHandler(tornado.web.RequestHandler, CommentMixin):
 
 class WaitForCommentsHandler(tornado.web.RequestHandler, CommentMixin):
     @tornado.web.asynchronous
+    """
+        Handles the longpolling requests. Post arguments include a discussion_id.
+        This method ensures that the created connection gets updates for the posted
+        discussion_id only.
+    """
     
     def post(self):
         discussion_id = self.request.arguments['discussion_id'][0]
@@ -220,7 +245,7 @@ class IssuesHandler(tornado.web.RequestHandler):
         discussion_id = json["discussion_id"]
         locale = os.path.split(response.request.url)[1]
         topic = os.path.split(os.path.split(response.request.url)[0])[1]
-        global_locale = os.path.split(os.path.split(os.path.split(response.request.url)[0])[0])[1]
+        global_locale = os.path.split(os.path.split(os.path.split(response.request.url)[0])[0])[1] # Yes, i know i could do this differently. but this way is just so cool.
         self.render('static/templates/locale.html', glob_locale = global_locale, topic = topic, glob_topic = glob_topic,
             locales = locales, comments=comments, discussion_id=discussion_id)
 
