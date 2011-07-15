@@ -83,6 +83,13 @@ class CommentMixin(object):
         cls = CommentMixin
         logging.info("Sending new comment to %r listeners", len(cls.waiters))
         for callback in cls.waiters:
+            """ 
+            the problem with this try statement is that every callback gets called, even if their
+            discussion_id doesnt match the one in the comment. they just get sent a blank update. 
+            while this isnt really a problem right now, it will definitely be a huge issue 
+            scalability-wise, considering every single connection gets updated every single time someone comments.
+            I should probably fix that...
+            """
             try:
                 comment_list = []
                 for comment in comments:
