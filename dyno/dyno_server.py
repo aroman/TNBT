@@ -94,8 +94,7 @@ class CommentMixin(object):
                 comment_list = []
                 for comment in comments:
                     if callback[1] == comment["discussion_id"]:
-                        comment_list.append(comment)
-                callback[0](comment_list)
+                            callback[0]([comment])
             except:
                 logging.error("Error in waiter callback", exc_info=True)
         cls.waiters = []
@@ -106,18 +105,14 @@ class CommentMixin(object):
 
 class IndexHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
-    """
-        Index request handler for the 1st tier category, Global Topic.
-    """
-    
     def get(self):
     	http = tornado.httpclient.AsyncHTTPClient()
     	http.fetch(API_ROOT + "/view/categories", callback=self.on_response)	
     
     def on_response(self, response):
-		if response.error: self.finish(response.error)
-		globtops = eval(response.body)
-		self.render('static/templates/index.html', globtops=globtops)
+        if response.error: self.finish(response.error)
+        globtops = eval(response.body)
+        self.render('static/templates/index.html', globtops=globtops)
 
 
 class NewCommentHandler(tornado.web.RequestHandler, CommentMixin):
@@ -139,12 +134,9 @@ class NewCommentHandler(tornado.web.RequestHandler, CommentMixin):
 
 class WaitForCommentsHandler(tornado.web.RequestHandler, CommentMixin):
     @tornado.web.asynchronous
-    """
-        Handles the longpolling requests. Post arguments include a discussion_id.
-        This method ensures that the created connection gets updates for the posted
-        discussion_id only.
-    """
-    
+    #    Handles the longpolling requests. Post arguments include a discussion_id.
+    #    This method ensures that the created connection gets updates for the posted
+    #    discussion_id only.
     def post(self):
         discussion_id = self.request.arguments['discussion_id'][0]
         cursor = self.get_argument("cursor", None)
